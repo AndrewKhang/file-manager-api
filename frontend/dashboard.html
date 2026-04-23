@@ -1,606 +1,396 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>File Manager — Dashboard</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a0f;
-      --surface: #111118;
-      --surface2: #16161f;
-      --border: #1e1e2e;
-      --accent: #7c6af7;
-      --accent-glow: rgba(124, 106, 247, 0.2);
-      --text: #e8e8f0;
-      --muted: #5a5a72;
-      --error: #f56565;
-      --success: #48bb78;
-      --warning: #f6ad55;
-    }
-
-    body {
-      font-family: 'DM Mono', monospace;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-    }
-
-    /* Navbar */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(10,10,15,0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 32px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .nav-logo {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-logo::before {
-      content: '';
-      width: 7px; height: 7px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 10px var(--accent);
-      animation: blink 2s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .user-badge {
-      font-size: 12px;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .role-tag {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .role-tag.admin {
-      background: rgba(124,106,247,0.15);
-      color: var(--accent);
-      border: 1px solid rgba(124,106,247,0.3);
-    }
-
-    .role-tag.user {
-      background: rgba(72,187,120,0.1);
-      color: var(--success);
-      border: 1px solid rgba(72,187,120,0.25);
-    }
-
-    .btn-logout {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 6px 14px;
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-
-    .btn-logout:hover {
-      border-color: var(--error);
-      color: var(--error);
-    }
-
-    /* Main layout */
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 40px 32px;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .page-title {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 22px;
-      margin-bottom: 4px;
-    }
-
-    .page-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 32px;
-    }
-
-    /* Upload zone */
-    .upload-zone {
-      border: 1.5px dashed var(--border);
-      border-radius: 12px;
-      padding: 32px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      margin-bottom: 32px;
-      position: relative;
-    }
-
-    .upload-zone:hover, .upload-zone.drag-over {
-      border-color: var(--accent);
-      background: rgba(124,106,247,0.04);
-    }
-
-    .upload-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .upload-icon {
-      font-size: 28px;
-      margin-bottom: 10px;
-    }
-
-    .upload-text {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .upload-text span {
-      color: var(--accent);
-    }
-
-    .upload-progress {
-      display: none;
-      margin-top: 16px;
-    }
-
-    .progress-bar {
-      height: 3px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--accent);
-      width: 0%;
-      transition: width 0.3s ease;
-      border-radius: 99px;
-    }
-
-    /* Files section */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-family: 'Syne', sans-serif;
-      font-weight: 600;
-      font-size: 14px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .file-count {
-      font-size: 11px;
-      color: var(--muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 99px;
-      padding: 2px 10px;
-    }
-
-    /* File list */
-    .file-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .file-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      transition: border-color 0.2s, transform 0.15s;
-      animation: fadeIn 0.3s ease both;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateX(-8px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .file-item:hover {
-      border-color: rgba(124,106,247,0.3);
-      transform: translateX(2px);
-    }
-
-    .file-icon {
-      width: 36px; height: 36px;
-      background: rgba(124,106,247,0.1);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-
-    .file-info { flex: 1; min-width: 0; }
-
-    .file-name {
-      font-size: 13px;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 2px;
-    }
-
-    .file-meta {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .btn-delete {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex-shrink: 0;
-    }
-
-    .btn-delete:hover {
-      border-color: var(--error);
-      color: var(--error);
-      background: rgba(245,101,101,0.08);
-    }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .empty-state .empty-icon {
-      font-size: 32px;
-      margin-bottom: 12px;
-      opacity: 0.4;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 12px 18px;
-      border-radius: 8px;
-      font-size: 12px;
-      z-index: 999;
-      transform: translateY(80px);
-      opacity: 0;
-      transition: all 0.3s ease;
-      pointer-events: none;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .toast.success {
-      background: rgba(72,187,120,0.15);
-      border: 1px solid rgba(72,187,120,0.3);
-      color: var(--success);
-    }
-
-    .toast.error {
-      background: rgba(245,101,101,0.15);
-      border: 1px solid rgba(245,101,101,0.3);
-      color: var(--error);
-    }
-
-    /* Unverified banner */
-    .banner {
-      background: rgba(246,173,85,0.08);
-      border: 1px solid rgba(246,173,85,0.25);
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 12px;
-      color: var(--warning);
-      margin-bottom: 24px;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <nav>
-    <div class="nav-logo">File Manager</div>
-    <div class="nav-right">
-      <div class="user-badge">
-        <span id="navUsername">—</span>
-        <span class="role-tag" id="navRole">user</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Manager — Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <nav>
+      <div class="nav-logo">File Manager</div>
+      <div class="nav-right">
+        <div class="user-badge">
+          <span id="navUsername">—</span>
+          <span class="role-tag" id="navRole">user</span>
+        </div>
+        <button class="btn-logout" onclick="logout()">logout</button>
       </div>
-      <button class="btn-logout" onclick="logout()">logout</button>
-    </div>
-  </nav>
+    </nav>
 
-  <main>
-    <div class="page-title">My Files</div>
-    <p class="page-sub" id="pageSubtitle">// manage your uploads</p>
+    <main>
+      <div class="page-title">My Files</div>
+      <p class="page-sub" id="pageSubtitle">// manage your uploads</p>
 
-    <div class="banner" id="unverifiedBanner">
-      [!] Your email is not verified. You cannot upload files until you verify your account.
-    </div>
+      <div class="banner" id="unverifiedBanner">
+        [!] Your email is not verified. You cannot upload files until you verify
+        your account.
+      </div>
 
-    <div class="upload-zone" id="uploadZone">
-      <input type="file" id="fileInput" onchange="handleUpload(this.files[0])"/>
-      <div class="upload-icon"><i class="fa-regular fa-file"></i></div>
-      <div class="upload-text">Drop a file here or <span>browse</span></div>
-      <div class="upload-progress" id="uploadProgress">
-        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="upload-zone" id="uploadZone">
+        <input
+          type="file"
+          id="fileInput"
+          onchange="handleUpload(this.files[0])"
+        />
+        <div class="upload-icon"><i class="fa-regular fa-file"></i></div>
+        <div class="upload-text">Drop a file here or <span>browse</span></div>
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+      </div>
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        oninput="searchFiles()"
+        placeholder="Search files..."
+      />
+      <div class="section-header">
+        <div class="section-title">Uploads</div>
+        <div class="file-count" id="fileCount">0 files</div>
+      </div>
+
+      <div class="file-list" id="fileList">
+        <div class="empty-state">
+          <div class="empty-icon">[ ]</div>
+          <div>No files yet</div>
+        </div>
+      </div>
+      <div
+        id="pagination"
+        style="
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          margin-top: 16px;
+          font-size: 12px;
+          color: var(--muted);
+        "
+      ></div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <div
+      id="confirmModal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 32px;
+          max-width: 360px;
+          width: 90%;
+          text-align: center;
+        "
+      >
+        <p
+          id="confirmMessage"
+          style="font-size: 14px; margin-bottom: 24px; color: var(--text)"
+        ></p>
+        <div style="display: flex; gap: 12px; justify-content: center">
+          <button
+            id="confirmCancel"
+            style="
+              background: transparent;
+              border: 1px solid var(--border);
+              color: var(--muted);
+              border-radius: 6px;
+              padding: 8px 20px;
+              font-family: &quot;DM Mono&quot;, monospace;
+              cursor: pointer;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            id="confirmOk"
+            style="
+              background: var(--error);
+              border: none;
+              color: #fff;
+              border-radius: 6px;
+              padding: 8px 20px;
+              font-family: &quot;DM Mono&quot;, monospace;
+              cursor: pointer;
+            "
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
 
-    <div class="section-header">
-      <div class="section-title">Uploads</div>
-      <div class="file-count" id="fileCount">0 files</div>
-    </div>
+    <script>
+      const API = "http://localhost:8000";
+      let currentUser = null;
+      let allFiles = [];
+      let currentPage = 1;
+      const PAGE_SIZE = 5;
+      // Auth guard
+      const token = localStorage.getItem("token");
+      if (!token) window.location.href = "login.html";
 
-    <div class="file-list" id="fileList">
-      <div class="empty-state">
-        <div class="empty-icon">[ ]</div>
-        <div>No files yet</div>
-      </div>
-    </div>
-  </main>
-
-  <div class="toast" id="toast"></div>
-
-  <script>
-    const API = 'http://localhost:8000';
-    let currentUser = null;
-
-    // Auth guard
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'login.html';
-
-    function authHeaders() {
-      return { 'Authorization': `Bearer ${token}` };
-    }
-
-    async function init() {
-      try {
-        const res = await fetch(`${API}/users/me`, { headers: authHeaders() });
-        if (!res.ok) { logout(); return; }
-        currentUser = await res.json();
-
-        document.getElementById('navUsername').textContent = currentUser.username;
-        const roleTag = document.getElementById('navRole');
-        roleTag.textContent = currentUser.role;
-        roleTag.className = `role-tag ${currentUser.role}`;
-
-        if (currentUser.role === 'admin') {
-          document.getElementById('pageSubtitle').textContent = '// all user uploads';
-        }
-
-        if (!currentUser.is_verified) {
-          document.getElementById('unverifiedBanner').style.display = 'block';
-          document.getElementById('uploadZone').style.opacity = '0.4';
-          document.getElementById('uploadZone').style.pointerEvents = 'none';
-        }
-
-        loadFiles();
-      } catch {
-        logout();
+      function authHeaders() {
+        return { Authorization: `Bearer ${token}` };
       }
-    }
 
-    async function loadFiles() {
-      try {
-        const res = await fetch(`${API}/files/`, { headers: authHeaders() });
-        const files = await res.json();
-        console.log(files);
+      async function init() {
+        try {
+          const res = await fetch(`${API}/users/me`, {
+            headers: authHeaders(),
+          });
+          if (!res.ok) {
+            logout();
+            return;
+          }
+          currentUser = await res.json();
 
-        document.getElementById('fileCount').textContent = `${files.length} file${files.length !== 1 ? 's' : ''}`;
+          document.getElementById("navUsername").textContent =
+            currentUser.username;
+          const roleTag = document.getElementById("navRole");
+          roleTag.textContent = currentUser.role;
+          roleTag.className = `role-tag ${currentUser.role}`;
 
-        const list = document.getElementById('fileList');
+          if (currentUser.role === "admin") {
+            document.getElementById("pageSubtitle").textContent =
+              "// all user uploads";
+          }
+
+          if (!currentUser.is_verified) {
+            document.getElementById("unverifiedBanner").style.display = "block";
+            document.getElementById("uploadZone").style.opacity = "0.4";
+            document.getElementById("uploadZone").style.pointerEvents = "none";
+          }
+
+          loadFiles();
+        } catch {
+          logout();
+        }
+      }
+
+      function renderFiles(files) {
+        const list = document.getElementById("fileList");
         if (files.length === 0) {
           list.innerHTML = `<div class="empty-state"><div class="empty-icon">[ ]</div><div>No files yet</div></div>`;
           return;
         }
-
-        list.innerHTML = files.map((f, i) => `
-          <div class="file-item" style="animation-delay:${i * 0.05}s">
-            <div class="file-icon">${getFileIcon(f.filename)}</div>
-            <div class="file-info">
-              <div class="file-name">${f.filename}</div>
-              <div class="file-meta">${formatSize(f.file_size)}</div>
-            </div>
-            <button class="btn-delete" onclick="previewFile(${f.id})">preview</button>
-            <button class="btn-delete" onclick="deleteFile(${f.id}, '${f.filename}')">delete</button>
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const pageFiles = files.slice(start, start + PAGE_SIZE);
+        list.innerHTML = pageFiles
+          .map(
+            (f, i) => `
+        <div class="file-item" style="animation-delay:${i * 0.05}s">
+          <div class="file-icon">${getFileIcon(f.filename)}</div>
+          <div class="file-info">
+            <div class="file-name">${f.filename}</div>
+            <div class="file-meta">${formatSize(f.file_size)}</div>
           </div>
-        `).join('');
-      } catch {
-        showToast('error', 'Failed to load files.');
+          <button class="btn-delete" onclick="previewFile(${f.id})">preview</button>
+          <button class="btn-delete" onclick="deleteFile(${f.id}, '${f.filename}')">delete</button>
+        </div>
+      `,
+          )
+          .join("");
+        const totalPages = Math.ceil(files.length / PAGE_SIZE);
+        document.getElementById("pagination").innerHTML = `
+  <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>prev</button>
+  <span>${currentPage} / ${totalPages}</span>
+  <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}>next</button>
+`;
       }
-    }
 
-    async function handleUpload(file) {
-      if (!file) return;
-      if (!currentUser.is_verified) {
-        showToast('error', 'Verify your email first.');
-        return;
+      async function loadFiles() {
+        try {
+          const res = await fetch(`${API}/files/`, { headers: authHeaders() });
+          const files = await res.json();
+          if (res.status === 401) { logout(); return; }
+          allFiles = files;
+
+          document.getElementById("fileCount").textContent =
+            `${files.length} file${files.length !== 1 ? "s" : ""}`;
+          renderFiles(files);
+        } catch {
+          showToast("error", "Failed to load files.");
+        }
       }
 
-      const progress = document.getElementById('uploadProgress');
-      const fill = document.getElementById('progressFill');
-      progress.style.display = 'block';
-      fill.style.width = '30%';
+      async function handleUpload(file) {
+        if (!file) return;
+        if (!currentUser.is_verified) {
+          showToast("error", "Verify your email first.");
+          return;
+        }
 
-      const formData = new FormData();
-      formData.append('file', file);
+        const progress = document.getElementById("uploadProgress");
+        const fill = document.getElementById("progressFill");
+        progress.style.display = "block";
+        fill.style.width = "30%";
 
-      try {
-        fill.style.width = '60%';
-        const res = await fetch(`${API}/files/upload`, {
-          method: 'POST',
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          fill.style.width = "60%";
+          const res = await fetch(`${API}/files/upload`, {
+            method: "POST",
+            headers: authHeaders(),
+            body: formData,
+          });
+
+          fill.style.width = "100%";
+          if (res.status === 401) { logout(); return; }
+
+          if (!res.ok) {
+            const data = await res.json();
+            showToast("error", data.detail || "Upload failed.");
+            return;
+          }
+
+          showToast("success", `${file.name} uploaded!`);
+          setTimeout(loadFiles, 300);
+        } catch {
+          showToast("error", "Upload failed.");
+        } finally {
+          setTimeout(() => {
+            progress.style.display = "none";
+            fill.style.width = "0%";
+            document.getElementById("fileInput").value = "";
+          }, 600);
+        }
+      }
+
+      async function deleteFile(id, name) {
+        showConfirm(`Delete "${name}"?`, async () => {
+          try {
+            const res = await fetch(`${API}/files/${id}`, {
+              method: "DELETE",
+              headers: authHeaders(),
+            });
+
+            if (res.status === 401) { logout(); return; }
+            if (!res.ok) {
+              const data = await res.json();
+              showToast("error", data.detail || "Delete failed.");
+              return;
+            }
+
+            showToast("success", `${name} deleted.`);
+            loadFiles();
+          } catch {
+            showToast("error", "Delete failed.");
+          }
+        });
+      }
+
+      function showConfirm(message, onConfirm) {
+        const modal = document.getElementById("confirmModal");
+        document.getElementById("confirmMessage").textContent = message;
+        modal.style.display = "flex";
+
+        document.getElementById("confirmOk").onclick = () => {
+          modal.style.display = "none";
+          onConfirm();
+        };
+        document.getElementById("confirmCancel").onclick = () => {
+          modal.style.display = "none";
+        };
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      }
+
+      async function previewFile(id) {
+        const res = await fetch(`${API}/files/${id}/preview`, {
           headers: authHeaders(),
-          body: formData
         });
-
-        fill.style.width = '100%';
-
-        if (!res.ok) {
-          const data = await res.json();
-          showToast('error', data.detail || 'Upload failed.');
-          return;
-        }
-
-        showToast('success', `${file.name} uploaded!`);
-        setTimeout(loadFiles, 300);
-      } catch {
-        showToast('error', 'Upload failed.');
-      } finally {
-        setTimeout(() => {
-          progress.style.display = 'none';
-          fill.style.width = '0%';
-          document.getElementById('fileInput').value = '';
-        }, 600);
+        const blob = await res.blob(); // raw binary response
+        const url = URL.createObjectURL(blob); // temp browser-local URL pointing to blob in RAM
+        window.open(url, "_blank"); // browser renders it in new tab
       }
-    }
 
-    async function deleteFile(id, name) {
-      if (!confirm(`Delete "${name}"?`)) return;
-
-      try {
-        const res = await fetch(`${API}/files/${id}`, {
-          method: 'DELETE',
-          headers: authHeaders()
-        });
-
-        if (!res.ok) {
-          const data = await res.json();
-          showToast('error', data.detail || 'Delete failed.');
-          return;
-        }
-
-        showToast('success', `${name} deleted.`);
-        loadFiles();
-      } catch {
-        showToast('error', 'Delete failed.');
+      function getFileIcon(filename) {
+        const ext = filename.split(".").pop().toLowerCase();
+        const icons = {
+          pdf: "PDF",
+          png: '<i class="fa-solid fa-file-image"></i>',
+          jpg: '<i class="fa-solid fa-file-image"></i>',
+          jpeg: '<i class="fa-solid fa-file-image"></i>',
+          gif: '<i class="fa-solid fa-file-image"></i>',
+          mp4: '<i class="fa-solid fa-file-video"></i>',
+          mp3: '<i class="fa-solid fa-file-audio"></i>',
+          zip: '<i class="fa-solid fa-file-zipper"></i>',
+          txt: '<i class="fa-solid fa-file-lines"></i>',
+          doc: '<i class="fa-solid fa-file-word"></i>',
+          docx: '<i class="fa-solid fa-file-word"></i>',
+        };
+        return icons[ext] || '<i class="fa-solid fa-file"></i>';
       }
-    }
 
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    }
+      function formatSize(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      }
 
-async function previewFile(id) {
-  const res = await fetch(`${API}/files/${id}/preview`, { headers: authHeaders() });
-  const blob = await res.blob();         // raw binary response
-  const url = URL.createObjectURL(blob); // temp browser-local URL pointing to blob in RAM
-  window.open(url, '_blank');            // browser renders it in new tab
-}
-
-    function getFileIcon(filename) {
-      const ext = filename.split('.').pop().toLowerCase();
-      const icons = { pdf: 'PDF', png: '<i class="fa-solid fa-file-image"></i>', jpg: '<i class="fa-solid fa-file-image"></i>', jpeg: '<i class="fa-solid fa-file-image"></i>', gif: '<i class="fa-solid fa-file-image"></i>', mp4: '<i class="fa-solid fa-file-video"></i>', mp3: '<i class="fa-solid fa-file-audio"></i>', zip: '<i class="fa-solid fa-file-zipper"></i>', txt: '<i class="fa-solid fa-file-lines"></i>', doc: '<i class="fa-solid fa-file-word"></i>', docx: '<i class="fa-solid fa-file-word"></i>' };
-      return icons[ext] || '<i class="fa-solid fa-file"></i>';
-    }
-
-    function formatSize(bytes) {
-      if (bytes < 1024) return `${bytes} B`;
-      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    }
-
-    function showToast(type, text) {
-      const toast = document.getElementById('toast');
-      toast.className = `toast ${type}`;
-      toast.textContent = text;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    // Drag & drop
-    const zone = document.getElementById('uploadZone');
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file) handleUpload(file);
-    });
-
-    init();
-  </script>
-</body>
+      function showToast(type, text) {
+        const toast = document.getElementById("toast");
+        toast.className = `toast ${type}`;
+        toast.textContent = text;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3000);
+      }
+      function changePage(page) {
+        currentPage = page;
+        renderFiles(allFiles);
+      }
+      // Drag & drop
+      const zone = document.getElementById("uploadZone");
+      zone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        zone.classList.add("drag-over");
+      });
+      zone.addEventListener("dragleave", () =>
+        zone.classList.remove("drag-over"),
+      );
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zone.classList.remove("drag-over");
+        const file = e.dataTransfer.files[0];
+        if (file) handleUpload(file);
+      });
+      function searchFiles() {
+        const query = document.getElementById("searchInput").value;
+        const filtered = allFiles.filter((f) =>
+          f.filename.toLowerCase().includes(query.toLowerCase()),
+        );
+        currentPage = 1;
+        renderFiles(filtered);
+      }
+      init();
+    </script>
+  </body>
 </html>
