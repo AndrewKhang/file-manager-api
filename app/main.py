@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # dev only
+    allow_origins=["https://snazzy-meerkat-7205c2.netlify.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

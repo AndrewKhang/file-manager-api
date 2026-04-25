@@ -16,7 +16,7 @@ conf = ConnectionConfig(
 )
 
 async def send_verification_email(email: str, token: str):
-    link = f"http://localhost:8000/users/verify-email?token={token}"
+    link = f"https://file-manager-api-production.up.railway.app/users/verify-email?token={token}"
     
     body = f"""
 <!DOCTYPE html>
