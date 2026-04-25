@@ -235,8 +235,8 @@
       async function loadFiles() {
         try {
           const res = await fetch(`${API}/files/`, { headers: authHeaders() });
-          const files = await res.json();
           if (res.status === 401) { logout(); return; }
+          const files = await res.json();
           allFiles = files;
 
           document.getElementById("fileCount").textContent =
@@ -416,7 +416,7 @@
           showToast("error", "Failed to load users.");
         }
       }
-      function renderUsers(users) {
+      function renderUsers(filtered) {
         const list = document.getElementById("userList");
         if (!list) return;
         if (users.length === 0) {

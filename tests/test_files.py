@@ -1,16 +1,17 @@
 from fastapi.testclient import TestClient
 from app.main import app
+from unittest.mock import patch, AsyncMock
 import uuid
 import io
 from app.database import SessionLocal
 from app import models
 client = TestClient(app)
 
-# Register and login tot take token
 def get_token():
     email = f"test_{uuid.uuid4().hex[:8]}@gmail.com"
     username = f"user_{uuid.uuid4().hex[:8]}"
-    client.post("/users/register", json={"email": email, "username": username, "password": "testpass123"})
+    with patch("app.routers.users.send_verification_email", new=AsyncMock()):
+        client.post("/users/register", json={"email": email, "username": username, "password": "testpass123"})
     res = client.post("/users/login", data={"username": username, "password": "testpass123"})
     return res.json()["access_token"]
 
@@ -25,9 +26,9 @@ def test_upload_unverified():
 def get_verified_token():
     email = f"test_{uuid.uuid4().hex[:8]}@gmail.com"
     username = f"user_{uuid.uuid4().hex[:8]}"
-    client.post("/users/register", json={"email": email, "username": username, "password": "testpass123"})
-    
-    
+    with patch("app.routers.users.send_verification_email", new=AsyncMock()):
+        client.post("/users/register", json={"email": email, "username": username, "password": "testpass123"})
+
     # bypass email — set verified directly in DB
     db = SessionLocal()
     user = db.query(models.User).filter(models.User.username == username).first()

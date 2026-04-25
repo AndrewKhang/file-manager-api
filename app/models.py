@@ -18,8 +18,8 @@ class File (Base):
     __tablename__ = "files"
 
     id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String, unique=True, index=True, nullable=False)
-    file_path = Column(String, unique=True, index=True, nullable=False)
+    filename = Column(String, index=True, nullable=False)
+    file_path = Column(String, index=True, nullable=False)
     file_size = Column(Integer, nullable=False)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

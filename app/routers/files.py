@@ -45,7 +45,8 @@ def delete_file(file_id: int, db: Session = Depends(get_db), current_user: model
       raise HTTPException(status_code=404, detail="File not found !")
     if current_user.id != db_file.owner_id and current_user.role != "admin":
        raise HTTPException(status_code=403, detail="Permission denied !")
-    os.remove(db_file.file_path)
+    if os.path.exists(db_file.file_path):  # skip if already deleted from disk
+        os.remove(db_file.file_path)
     db.delete(db_file)
     db.commit()
     return {"message":"File deleted successfully!"}

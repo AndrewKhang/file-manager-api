@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta, timezone
 import secrets
 from app.email import send_verification_email
-
+import os
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -63,6 +63,11 @@ def delete_user(user_id: int, db: Session = Depends(get_db), admin: models.User 
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    user_files = db.query(models.File).filter(models.File.owner_id == user_id).all()
+    for f in user_files:
+     if os.path.exists(f.file_path):
+        os.remove(f.file_path)
+     db.delete(f)
     db.delete(user)
     db.commit()
     return {"message": f"User {user_id} deleted"}
