@@ -6,7 +6,6 @@ import io
 from app.database import SessionLocal
 from app import models
 client = TestClient(app)
-
 def get_token():
     email = f"test_{uuid.uuid4().hex[:8]}@gmail.com"
     username = f"user_{uuid.uuid4().hex[:8]}"
