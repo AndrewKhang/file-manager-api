@@ -82,13 +82,25 @@ MAIL_PASSWORD=your_app_password
 MAIL_FROM=your_email@gmail.com
 ```
 
-### 5. Run the server
+### 5. Create uploads folder
+
+```bash
+mkdir uploads
+```
+
+### 6. Run the server
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
 API docs available at: `http://localhost:8000/docs`
+
+## Running Tests
+
+```bash
+pytest tests/
+```
 
 ## API Endpoints
 
