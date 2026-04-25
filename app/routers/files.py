@@ -27,7 +27,7 @@ async def upload_file(
     db.add(db_file)
     db.commit()
     db.refresh(db_file)  # sync db-generated fields (id, created_at) back to the object
-    return {"filename": db_file.filename, "file_size": db_file.file_size}
+    return {"id": db_file.id, "filename": db_file.filename, "file_size": db_file.file_size}
 
 @router.get("/")
 def get_files(

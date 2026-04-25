@@ -67,6 +67,7 @@
           <div>No files yet</div>
         </div>
       </div>
+       
       <div
         id="pagination"
         style="
@@ -78,6 +79,15 @@
           color: var(--muted);
         "
       ></div>
+      <section id="adminSection" style="display:none; margin-top:40px;">
+         <div class="section-header">
+          <div class="section-title">All Users</div>
+          <div class="file-count" id="userCount">0 users</div>
+        </div>
+        <div class="file-list" id="userList"></div>
+        </section>
+
+
     </main>
 
     <div class="toast" id="toast"></div>
@@ -146,6 +156,7 @@
       const API = "http://localhost:8000";
       let currentUser = null;
       let allFiles = [];
+      let allUsers = [];
       let currentPage = 1;
       const PAGE_SIZE = 5;
       // Auth guard
@@ -173,10 +184,10 @@
           roleTag.textContent = currentUser.role;
           roleTag.className = `role-tag ${currentUser.role}`;
 
-          if (currentUser.role === "admin") {
-            document.getElementById("pageSubtitle").textContent =
-              "// all user uploads";
-          }
+         if (currentUser.role === 'admin') {
+  document.getElementById('adminSection').style.display = 'block';
+  loadUsers();
+}
 
           if (!currentUser.is_verified) {
             document.getElementById("unverifiedBanner").style.display = "block";
@@ -390,6 +401,63 @@
         currentPage = 1;
         renderFiles(filtered);
       }
+        async function loadUsers() {
+        try {
+          const res = await fetch(`${API}/users/admin/users`, { headers: authHeaders() });
+          const users = await res.json();
+          if (res.status === 401) { logout(); return; }
+          const filtered = users.filter(u => u.role !== 'admin');
+          allUsers = filtered;
+
+          document.getElementById("userCount").textContent =
+            `${filtered.length} user${filtered.length !== 1 ? "s" : ""}`;
+          renderUsers(filtered);
+        } catch {
+          showToast("error", "Failed to load users.");
+        }
+      }
+      function renderUsers(users) {
+        const list = document.getElementById("userList");
+        if (!list) return;
+        if (users.length === 0) {
+          list.innerHTML = `<div class="empty-state"><div class="empty-icon">[ ]</div><div>No users found</div></div>`;
+          return;
+        }
+        list.innerHTML = users.map((u, i) => `
+          <div class="file-item" style="animation-delay:${i * 0.05}s">
+            <div class="file-icon"><i class="fa-solid fa-user"></i></div>
+            <div class="file-info">
+              <div class="file-name">${u.username}</div>
+              <div class="file-meta">${u.email} · ${u.role} · ${u.is_verified ? 'verified' : 'unverified'}</div>
+            </div>
+            <button class="btn-delete" onclick="deleteUser(${u.id}, '${u.username}')">delete</button>
+          </div>
+        `).join('');
+      }
+
+      async function deleteUser(id, name) {
+        showConfirm(`Delete "${name}"?`, async () => {
+          try {
+            const res = await fetch(`${API}/users/admin/users/${id}`, {
+              method: "DELETE",
+              headers: authHeaders(),
+            });
+
+            if (res.status === 401) { logout(); return; }
+            if (!res.ok) {
+              const data = await res.json();
+              showToast("error", data.detail || "Delete failed.");
+              return;
+            }
+
+            showToast("success", `${name} deleted.`);
+            loadUsers();
+          } catch {
+            showToast("error", "Delete failed.");
+          }
+        });
+      }
+
       init();
     </script>
   </body>
