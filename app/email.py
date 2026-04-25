@@ -1,23 +1,14 @@
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from dotenv import load_dotenv
+import resend
 import os
+from dotenv import load_dotenv
 
 load_dotenv()
 
-conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
-    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"),
-    MAIL_FROM=os.getenv("MAIL_FROM"),
-    MAIL_PORT=465,
-    MAIL_SERVER="smtp.gmail.com",
-    MAIL_STARTTLS=False,
-    MAIL_SSL_TLS=True,
-    USE_CREDENTIALS=True
-)
+resend.api_key = os.getenv("RESEND_API_KEY")
 
 async def send_verification_email(email: str, token: str):
     link = f"https://file-manager-api-production.up.railway.app/users/verify-email?token={token}"
-    
+
     body = f"""
 <!DOCTYPE html>
 <html>
@@ -62,12 +53,9 @@ async def send_verification_email(email: str, token: str):
 </html>
 """
 
-    message = MessageSchema(
-        subject="Verify your email – File Manager",
-        recipients=[email],
-        body=body,
-        subtype="html"
-    )
-    
-    fm = FastMail(conf)
-    await fm.send_message(message)
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",
+        "to": email,
+        "subject": "Verify your email – File Manager",
+        "html": body
+    })
