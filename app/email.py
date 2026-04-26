@@ -55,7 +55,7 @@ async def send_verification_email(email: str, token: str):
 
     resend.Emails.send({
         "from": "onboarding@resend.dev",
-        "to": email,
-        "subject": "Verify your email – File Manager",
+        "to": [email],
+        "subject": "Verify your email - File Manager",
         "html": body
     })

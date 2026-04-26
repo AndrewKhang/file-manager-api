@@ -8,6 +8,7 @@ from app.auth import get_current_user, require_admin
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta, timezone
 import secrets
+from fastapi.responses import RedirectResponse
 from app.email import send_verification_email
 import os
 
@@ -84,4 +85,5 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     user.verification_token = None
     user.token_expires_at = None
     db.commit()
+    return RedirectResponse(url="login.html")
     return {"message": "Email verified successfully"}
