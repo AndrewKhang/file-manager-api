@@ -1,14 +1,19 @@
 # File Manager API
 
-A RESTful file management API built with FastAPI and PostgreSQL, featuring JWT authentication, role-based access control, email verification, and file upload/download.
+A RESTful file management API built with FastAPI and PostgreSQL, featuring JWT authentication, role-based access control, email verification, and file upload/download/preview.
+
+## Live Demo
+
+[https://file-manager-api-production.up.railway.app](https://file-manager-api-production.up.railway.app)
 
 ## Tech Stack
 
 - **Backend:** FastAPI, SQLAlchemy ORM
 - **Database:** PostgreSQL
 - **Auth:** JWT (python-jose), bcrypt
-- **Email:** FastAPI-Mail (Gmail SMTP)
+- **Email:** Resend API
 - **Frontend:** HTML / CSS / Vanilla JS
+- **Deploy:** Railway
 
 ## Features
 
@@ -16,8 +21,10 @@ A RESTful file management API built with FastAPI and PostgreSQL, featuring JWT a
 - JWT-based authentication
 - Role-based access control (admin / user)
 - File upload, download, and preview
+- Search and pagination for file list
 - Admin dashboard: manage all users and files
 - Drag & drop file upload
+- Custom confirm modal (no browser dialog)
 
 ## Project Structure
 
@@ -36,7 +43,11 @@ file_manager_api/
 ├── frontend/
 │   ├── index.html
 │   ├── login.html
-│   └── dashboard.html
+│   ├── dashboard.html
+│   ├── auth.css
+│   └── dashboard.css
+├── tests/
+│   └── test_files.py
 ├── uploads/
 ├── .env
 └── requirements.txt
@@ -77,10 +88,10 @@ DB_PASSWORD=your_password
 SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
-MAIL_USERNAME=your_email@gmail.com
-MAIL_PASSWORD=your_app_password
-MAIL_FROM=your_email@gmail.com
+RESEND_API_KEY=your_resend_api_key
 ```
+
+> Get a free Resend API key at [resend.com](https://resend.com)
 
 ### 5. Create uploads folder
 
@@ -109,6 +120,7 @@ pytest tests/
 | POST | `/users/register` | Register new user | — |
 | POST | `/users/login` | Login | — |
 | GET | `/users/me` | Get current user | ✅ |
+| GET | `/users/verify-email` | Verify email via token | — |
 | GET | `/users/admin/users` | Get all users | Admin |
 | DELETE | `/users/admin/users/{id}` | Delete user | Admin |
 | GET | `/files/` | List files | ✅ |
