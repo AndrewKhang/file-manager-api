@@ -86,4 +86,3 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     user.token_expires_at = None
     db.commit()
     return RedirectResponse(url="login.html")
-    return {"message": "Email verified successfully"}
