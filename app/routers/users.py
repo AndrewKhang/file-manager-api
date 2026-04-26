@@ -85,4 +85,4 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     user.verification_token = None
     user.token_expires_at = None
     db.commit()
-    return RedirectResponse(url="login.html")
+    return RedirectResponse(url="/login.html")
